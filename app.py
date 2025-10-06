@@ -150,8 +150,8 @@ class FileSorterApp(customtkinter.CTk):
 
         try:
             logo_image = customtkinter.CTkImage(
-                light_image=Image.open(resource_path("sorteo_logo_lightmode.png")),
-                dark_image=Image.open(resource_path("sorteo_logo_darkmode.png")),
+                light_image=Image.open(resource_path("images/sorteo_logo_lightmode.png")),
+                dark_image=Image.open(resource_path("images/sorteo_logo_darkmode.png")),
                 size=(122, 32)
             )
             logo_label = customtkinter.CTkLabel(title_frame, image=logo_image, text="")
