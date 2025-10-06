@@ -10,7 +10,6 @@ import requests
 import webbrowser
 
 # --- CONSTANTS ---
-# !!! IMPORTANT: Replace this URL with the raw URL to your own version.json file on GitHub !!!
 GITHUB_VERSION_URL = "https://raw.githubusercontent.com/madmalio/file-sorter/main/version.json"
 
 
@@ -103,7 +102,7 @@ class CustomQuestionBox(customtkinter.CTkToplevel):
 
 
 class FileSorterApp(customtkinter.CTk):
-    APP_VERSION = "1.2"
+    APP_VERSION = "1.2.0"
     
     def __init__(self):
         super().__init__()
@@ -202,11 +201,21 @@ class FileSorterApp(customtkinter.CTk):
     def open_about_window(self):
         if self.about_window and self.about_window.winfo_exists(): self.about_window.focus(); return
         self.about_window = customtkinter.CTkToplevel(self)
-        self.about_window.title("About"); self.about_window.geometry("400x250"); self.about_window.transient(self); self.about_window.grab_set()
+        self.about_window.title("About"); self.about_window.geometry("400x300"); self.about_window.transient(self); self.about_window.grab_set()
+        
         customtkinter.CTkLabel(self.about_window, text=f"Advanced File Sorter v{self.APP_VERSION}", font=customtkinter.CTkFont(size=16, weight="bold")).pack(pady=(20, 10))
         customtkinter.CTkLabel(self.about_window, text="A utility to efficiently organize your files.", wraplength=350).pack(pady=5)
-        customtkinter.CTkLabel(self.about_window, text="Built with Python and CustomTkinter.", font=customtkinter.CTkFont(slant="italic")).pack(pady=(10, 20))
-        button_frame = customtkinter.CTkFrame(self.about_window, fg_color="transparent"); button_frame.pack(pady=10)
+        
+        customtkinter.CTkLabel(self.about_window, text="Created by: madmalio", font=customtkinter.CTkFont(slant="italic"), wraplength=380).pack(pady=(10, 5))
+        
+        repo_link = "https://github.com/madmalio/file-sorter"
+        link_label = customtkinter.CTkLabel(self.about_window, text="View Source on GitHub", text_color="#6A8EDD", cursor="hand2")
+        link_label.pack()
+        link_label.bind("<Button-1>", lambda e: webbrowser.open(repo_link))
+        
+        customtkinter.CTkLabel(self.about_window, text="Built with Python and CustomTkinter.", font=customtkinter.CTkFont(size=10)).pack(pady=(20, 0))
+
+        button_frame = customtkinter.CTkFrame(self.about_window, fg_color="transparent"); button_frame.pack(pady=(15,10))
         customtkinter.CTkButton(button_frame, text="Check for Updates", command=self.check_for_updates).pack(side="left", padx=10)
         customtkinter.CTkButton(button_frame, text="Close", command=self.about_window.destroy).pack(side="left", padx=10)
 
@@ -214,7 +223,6 @@ class FileSorterApp(customtkinter.CTk):
         threading.Thread(target=self._perform_update_check, daemon=True).start()
 
     def _perform_update_check(self):
-        # First, check if the URL is still a placeholder
         if "YOUR_USERNAME" in GITHUB_VERSION_URL:
             self.after(0, lambda: CustomMessageBox(self.about_window if self.about_window else self, 
                                                     title="Configuration Needed", 
@@ -225,14 +233,20 @@ class FileSorterApp(customtkinter.CTk):
             response = requests.get(GITHUB_VERSION_URL, timeout=5)
             response.raise_for_status()
             data = response.json()
-            latest_version = data['latest_version']
+            latest_version_str = data['latest_version']
+            release_url = data['release_url']
             
-            # Simple version comparison
-            if float(latest_version) > float(self.APP_VERSION):
-                release_url = data['release_url']
+            # Semantic version comparison
+            current_parts = [int(p) for p in self.APP_VERSION.split('.')]
+            latest_parts = [int(p) for p in latest_version_str.split('.')]
+
+            while len(current_parts) < len(latest_parts): current_parts.append(0)
+            while len(latest_parts) < len(current_parts): latest_parts.append(0)
+
+            if latest_parts > current_parts:
                 self.after(0, lambda: CustomQuestionBox(self.about_window if self.about_window else self, 
                                                         title="Update Available", 
-                                                        message=f"A new version (v{latest_version}) is available!\nWould you like to go to the download page?",
+                                                        message=f"A new version (v{latest_version_str}) is available!\nWould you like to go to the download page?",
                                                         on_yes=lambda: webbrowser.open(release_url)))
             else:
                 self.after(0, lambda: CustomMessageBox(self.about_window if self.about_window else self, title="Up to Date", message=f"You are running the latest version (v{self.APP_VERSION})."))
