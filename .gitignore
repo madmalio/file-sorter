@@ -1,2 +1,5 @@
 venv/
-sorter_config.json/
+build/
+dist/
+Sorteo.spec
+sorter_config.json
